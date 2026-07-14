@@ -1,0 +1,16 @@
+# Segredos e configuração local — jamais versionar
+.env
+
+# Histórico de fichas (pode conter dados clínicos) — jamais versionar
+historico/
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+.pytest_cache/
+.ruff_cache/
+dist/
+
+# Sistema
+.DS_Store
