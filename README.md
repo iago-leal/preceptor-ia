@@ -1,6 +1,6 @@
 # 🩺 PreceptorIA
 
-[![ci](https://github.com/iagoleal/preceptor-ia/actions/workflows/ci.yml/badge.svg)](https://github.com/iagoleal/preceptor-ia/actions/workflows/ci.yml)
+[![ci](https://github.com/iago-leal/preceptor-ia/actions/workflows/ci.yml/badge.svg)](https://github.com/iago-leal/preceptor-ia/actions/workflows/ci.yml)
 
 Ferramenta de **feedback formativo estruturado** para preceptoria em Medicina de Família e Comunidade. Você grava (ou cola a transcrição de) uma **passagem de caso** entre residente e preceptor; a aplicação transcreve o áudio, aplica um prompt pedagógico baseado nos modelos **SNAPPS** e **One-Minute Preceptor (OMP)** e devolve uma **ficha de feedback estruturada**, com evidências citadas da própria conversa.
 
@@ -20,7 +20,7 @@ O coração do produto é o **prompt canônico** em [`prompts/prompt-snapps-omp.
 Pré-requisitos: [`uv`](https://docs.astral.sh/uv) e uma chave de API gratuita da [Groq](https://console.groq.com/keys).
 
 ```bash
-git clone https://github.com/iagoleal/preceptor-ia.git
+git clone https://github.com/iago-leal/preceptor-ia.git
 cd preceptor-ia
 uv sync
 
