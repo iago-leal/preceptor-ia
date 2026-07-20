@@ -1,0 +1,58 @@
+{
+  "generated_at": "2026-07-20T00:00:00Z",
+  "project_root": "/Users/iagoleal/dev/preceptor-ia",
+  "languages": [
+    { "name": "Python", "extensions": [".py"], "file_count": 19 },
+    { "name": "Markdown", "extensions": [".md"], "file_count": 6 },
+    { "name": "TOML", "extensions": [".toml"], "file_count": 1 },
+    { "name": "YAML", "extensions": [".yml", ".yaml"], "file_count": 2 }
+  ],
+  "primary_language": "Python",
+  "frameworks": [
+    { "name": "Streamlit", "version": "1.59.2", "source": "pyproject.toml" },
+    { "name": "httpx", "version": "0.28.1", "source": "pyproject.toml" },
+    { "name": "pydantic-settings", "version": "2.14.2", "source": "pyproject.toml" }
+  ],
+  "package_manager": "uv",
+  "entry_points": [
+    { "path": "src/preceptor_ia/ui/app.py", "type": "app_entry" }
+  ],
+  "config_files": [
+    ".env.example",
+    "src/preceptor_ia/config.py",
+    "pyproject.toml",
+    ".pre-commit-config.yaml"
+  ],
+  "ci_cd": [
+    ".github/workflows/ci.yml"
+  ],
+  "database_hints": [],
+  "test_framework": "pytest",
+  "test_file_count": 4,
+  "modules": [
+    "domain",
+    "application",
+    "infra",
+    "ui",
+    "config",
+    "prompts"
+  ],
+  "total_files": 28,
+  "integrations": [
+    { "name": "Provedor LLM OpenAI-compatible (default Groq) — chat completions", "adapter": "src/preceptor_ia/infra/analise_openai.py" },
+    { "name": "Whisper OpenAI-compatible (default Groq) — transcrição de áudio", "adapter": "src/preceptor_ia/infra/transcricao_openai.py" }
+  ],
+  "organization_suggestion": {
+    "granularity": "feature",
+    "rationale": "As pastas top-level são camadas hexagonais (domain/application/infra/ui), não domínios; o produto tem um único fluxo central, então specs por feature representam melhor o sistema.",
+    "signals": [],
+    "features": [
+      "gerar-ficha",
+      "transcricao-audio",
+      "analise-llm",
+      "historico-local",
+      "configuracao",
+      "interface-streamlit"
+    ]
+  }
+}

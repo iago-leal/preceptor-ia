@@ -1,0 +1,312 @@
+{
+  "generated_at": "2026-07-20T13:00:00Z",
+  "modules": [
+    {
+      "name": "domain",
+      "path": "src/preceptor_ia/domain",
+      "purpose": "Regra de negócio pura: modelos imutáveis, erros nomeados, contratos (Protocols) e carregador do prompt canônico",
+      "primary_files": [
+        "src/preceptor_ia/domain/models.py",
+        "src/preceptor_ia/domain/ports.py",
+        "src/preceptor_ia/domain/prompt.py"
+      ],
+      "functions": [
+        {
+          "name": "Entrada.__post_init__",
+          "file": "src/preceptor_ia/domain/models.py",
+          "params": ["self"],
+          "returns": "None (levanta ErroEntradaInvalida)",
+          "confidence": "confirmed"
+        },
+        {
+          "name": "carregar_prompt",
+          "file": "src/preceptor_ia/domain/prompt.py",
+          "params": ["caminho: Path = CAMINHO_PROMPT_PADRAO"],
+          "returns": "str (levanta ErroPromptCanonico)",
+          "confidence": "confirmed"
+        }
+      ],
+      "entities": [
+        {
+          "name": "Entrada",
+          "fields": [
+            { "name": "origem", "type": "OrigemEntrada", "required": true },
+            { "name": "nome_arquivo", "type": "str|None", "required": false },
+            { "name": "conteudo_audio", "type": "bytes|None", "required": false },
+            { "name": "texto_transcricao", "type": "str|None", "required": false }
+          ],
+          "confidence": "confirmed"
+        },
+        {
+          "name": "Transcricao",
+          "fields": [
+            { "name": "texto", "type": "str", "required": true },
+            { "name": "origem_servico", "type": "str", "required": true }
+          ],
+          "confidence": "confirmed"
+        },
+        {
+          "name": "Ficha",
+          "fields": [
+            { "name": "markdown", "type": "str", "required": true },
+            { "name": "origem_entrada", "type": "OrigemEntrada", "required": true },
+            { "name": "contexto", "type": "str|None", "required": false },
+            { "name": "gerada_em", "type": "datetime", "required": false, "default": "datetime.now()" }
+          ],
+          "confidence": "confirmed"
+        },
+        {
+          "name": "OrigemEntrada",
+          "fields": [
+            { "name": "AUDIO", "type": "audio", "required": true },
+            { "name": "TEXTO", "type": "texto", "required": true },
+            { "name": "DEMO", "type": "demo", "required": true }
+          ],
+          "confidence": "confirmed"
+        }
+      ],
+      "business_rules": [
+        {
+          "description": "Áudio aceito apenas em .ogg/.mp3/.m4a/.wav e até 25 MB (RF-01)",
+          "location": "src/preceptor_ia/domain/models.py:58-72",
+          "confidence": "confirmed"
+        },
+        {
+          "description": "Entrada de texto/demo deve ter transcrição não-vazia (RD-01/RN-01)",
+          "location": "src/preceptor_ia/domain/models.py:52-56",
+          "confidence": "confirmed"
+        },
+        {
+          "description": "Prompt canônico é fonte única e obrigatória; ausência é falha fatal (RF-04/RN-06)",
+          "location": "src/preceptor_ia/domain/prompt.py:14-23",
+          "confidence": "confirmed"
+        }
+      ],
+      "dependencies": [],
+      "algorithms": ["validação de entrada por origem", "extração de extensão case-insensitive"],
+      "complexity": "low"
+    },
+    {
+      "name": "application",
+      "path": "src/preceptor_ia/application",
+      "purpose": "Caso de uso GerarFicha (orquestração entrada→transcrição→análise→ficha→histórico) e composition root",
+      "primary_files": [
+        "src/preceptor_ia/application/gerar_ficha.py",
+        "src/preceptor_ia/application/factory.py"
+      ],
+      "functions": [
+        {
+          "name": "GerarFicha.executar",
+          "file": "src/preceptor_ia/application/gerar_ficha.py",
+          "params": ["entrada: Entrada"],
+          "returns": "Ficha",
+          "confidence": "confirmed"
+        },
+        {
+          "name": "montar_gerar_ficha",
+          "file": "src/preceptor_ia/application/factory.py",
+          "params": ["settings: Settings | None = None"],
+          "returns": "GerarFicha",
+          "confidence": "confirmed"
+        }
+      ],
+      "entities": [],
+      "business_rules": [
+        {
+          "description": "Resposta de análise vazia não vira ficha (RN-03: não inventar)",
+          "location": "src/preceptor_ia/application/gerar_ficha.py:35-38",
+          "confidence": "confirmed"
+        },
+        {
+          "description": "Áudio não é retido após transcrição; só o texto circula (RN-07)",
+          "location": "src/preceptor_ia/application/gerar_ficha.py:57",
+          "confidence": "confirmed"
+        },
+        {
+          "description": "Histórico só grava quando repositório foi injetado (opt-in via HISTORICO_ATIVO, RF-07)",
+          "location": "src/preceptor_ia/application/gerar_ficha.py:41-42",
+          "confidence": "confirmed"
+        }
+      ],
+      "dependencies": ["domain", "config", "infra"],
+      "algorithms": ["logging estruturado chave=valor por etapa"],
+      "complexity": "low"
+    },
+    {
+      "name": "infra",
+      "path": "src/preceptor_ia/infra",
+      "purpose": "Adaptadores concretos das portas: transcrição e análise via HTTP OpenAI-compatible, histórico em filesystem",
+      "primary_files": [
+        "src/preceptor_ia/infra/transcricao_openai.py",
+        "src/preceptor_ia/infra/analise_openai.py",
+        "src/preceptor_ia/infra/historico.py"
+      ],
+      "functions": [
+        {
+          "name": "TranscricaoOpenAICompat.transcrever",
+          "file": "src/preceptor_ia/infra/transcricao_openai.py",
+          "params": ["conteudo: bytes", "nome_arquivo: str"],
+          "returns": "Transcricao",
+          "confidence": "confirmed"
+        },
+        {
+          "name": "AnaliseOpenAICompat.analisar",
+          "file": "src/preceptor_ia/infra/analise_openai.py",
+          "params": ["prompt_sistema: str", "transcricao: str"],
+          "returns": "str",
+          "confidence": "confirmed"
+        },
+        {
+          "name": "_levantar_erro_nomeado",
+          "file": "src/preceptor_ia/infra/transcricao_openai.py",
+          "params": ["resposta: httpx.Response", "etapa: str"],
+          "returns": "None (levanta erro de domínio por status)",
+          "confidence": "confirmed"
+        },
+        {
+          "name": "HistoricoFilesystem.gravar",
+          "file": "src/preceptor_ia/infra/historico.py",
+          "params": ["ficha: Ficha"],
+          "returns": "None",
+          "confidence": "confirmed"
+        }
+      ],
+      "entities": [],
+      "business_rules": [
+        {
+          "description": "Transcrição com idioma fixo pt (jargões da APS brasileira, RN-02)",
+          "location": "src/preceptor_ia/infra/transcricao_openai.py:34",
+          "confidence": "confirmed"
+        },
+        {
+          "description": "Análise com temperature=0.2: fidelidade, não criatividade (RN-03)",
+          "location": "src/preceptor_ia/infra/analise_openai.py:13",
+          "confidence": "confirmed"
+        },
+        {
+          "description": "Erros HTTP mapeados em erros nomeados: 401→Credencial, 429→LimiteProvedor, >=400→ServicoExterno",
+          "location": "src/preceptor_ia/infra/transcricao_openai.py:49-62",
+          "confidence": "confirmed"
+        },
+        {
+          "description": "Histórico grava um .md datestampado por ficha (RF-07, D-07); colisão no mesmo minuto sobrescreve",
+          "location": "src/preceptor_ia/infra/historico.py:16-22",
+          "confidence": "inferred"
+        }
+      ],
+      "dependencies": ["domain"],
+      "algorithms": ["mapeamento status HTTP → hierarquia de erros", "slug de nome de arquivo [a-z0-9-]"],
+      "complexity": "medium"
+    },
+    {
+      "name": "ui",
+      "path": "src/preceptor_ia/ui",
+      "purpose": "Página Streamlit única: três entradas (áudio, texto, demo), aviso de privacidade, progresso, exibição e download da ficha",
+      "primary_files": ["src/preceptor_ia/ui/app.py"],
+      "functions": [
+        {
+          "name": "_gerar",
+          "file": "src/preceptor_ia/ui/app.py",
+          "params": ["entrada: Entrada"],
+          "returns": "None (efeitos em session_state)",
+          "confidence": "confirmed"
+        },
+        {
+          "name": "_caso_de_uso",
+          "file": "src/preceptor_ia/ui/app.py",
+          "params": [],
+          "returns": "GerarFicha (cacheado por processo via st.cache_resource)",
+          "confidence": "confirmed"
+        }
+      ],
+      "entities": [],
+      "business_rules": [
+        {
+          "description": "Deduplicação por SHA-256 da entrada: mesma entrada na sessão não repete chamadas externas",
+          "location": "src/preceptor_ia/ui/app.py:43-48",
+          "confidence": "confirmed"
+        },
+        {
+          "description": "Aviso de privacidade LGPD permanente: não-retenção, casos simulados em demo, responsabilidade do preceptor",
+          "location": "src/preceptor_ia/ui/app.py:27-34",
+          "confidence": "confirmed"
+        },
+        {
+          "description": "Contingência offline: exibe demo/ficha-exemplo.md sem chamadas externas",
+          "location": "src/preceptor_ia/ui/app.py:89-93",
+          "confidence": "confirmed"
+        }
+      ],
+      "dependencies": ["application", "config", "domain"],
+      "algorithms": ["hash de deduplicação", "fila de 1 elemento via session_state.entrada_pendente"],
+      "complexity": "medium"
+    },
+    {
+      "name": "config",
+      "path": "src/preceptor_ia/config.py",
+      "purpose": "Settings tipadas via pydantic-settings (.env), falha barulhenta nomeando a variável ausente",
+      "primary_files": ["src/preceptor_ia/config.py"],
+      "functions": [
+        {
+          "name": "carregar_settings",
+          "file": "src/preceptor_ia/config.py",
+          "params": [],
+          "returns": "Settings (levanta ErroConfiguracao)",
+          "confidence": "confirmed"
+        }
+      ],
+      "entities": [
+        {
+          "name": "Settings",
+          "fields": [
+            { "name": "llm_api_key", "type": "str", "required": true },
+            { "name": "llm_base_url", "type": "str", "required": false, "default": "https://api.groq.com/openai/v1" },
+            { "name": "llm_model", "type": "str", "required": false, "default": "llama-3.3-70b-versatile" },
+            { "name": "transcricao_model", "type": "str", "required": false, "default": "whisper-large-v3-turbo" },
+            { "name": "historico_ativo", "type": "bool", "required": false, "default": "false" },
+            { "name": "historico_dir", "type": "Path", "required": false, "default": "~/.preceptor-ia/historico" }
+          ],
+          "confidence": "confirmed"
+        }
+      ],
+      "business_rules": [
+        {
+          "description": "Única variável obrigatória é LLM_API_KEY; provedor trocável sem código (RF-05)",
+          "location": "src/preceptor_ia/config.py:16-32",
+          "confidence": "confirmed"
+        }
+      ],
+      "dependencies": [],
+      "algorithms": [],
+      "complexity": "low"
+    },
+    {
+      "name": "prompts",
+      "path": "prompts",
+      "purpose": "Prompt canônico SNAPPS-OMP: comportamento pedagógico como dado (formato da ficha, regras de fidelidade, citações como evidência)",
+      "primary_files": ["prompts/prompt-snapps-omp.md"],
+      "functions": [],
+      "entities": [],
+      "business_rules": [
+        {
+          "description": "Nada é inferido além do dito: campo não identificável recebe 'Não identificado na transcrição'",
+          "location": "prompts/prompt-snapps-omp.md:26-32",
+          "confidence": "confirmed"
+        },
+        {
+          "description": "Cada elemento encontrado exige citação literal da transcrição como evidência",
+          "location": "prompts/prompt-snapps-omp.md:27",
+          "confidence": "confirmed"
+        },
+        {
+          "description": "Placeholder {{transcricao}} do template não é interpolado pelo código (transcrição vai como mensagem user separada)",
+          "location": "prompts/prompt-snapps-omp.md:104",
+          "confidence": "unknown"
+        }
+      ],
+      "dependencies": [],
+      "algorithms": [],
+      "complexity": "low"
+    }
+  ]
+}
